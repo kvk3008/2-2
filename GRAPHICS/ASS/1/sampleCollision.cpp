@@ -29,16 +29,41 @@ float ball_x3 = 0.0f;
 float poly_y1 = -( box_len / 2) + 0.5 ;
 float px  = 0,py = 0;
 float o=90.0f;
+float sflags[19];
+// Function Declarations
+void drawScene();
+void update(int value);
+void drawBox(float len);
+void drawBox2(float len);
+void drawBall(float rad);
+void drawTriangle();
+void initRendering();
+void handleResize(int w, int h);
+void handleKeypress1(unsigned char key, int x, int y);
+void handleKeypress2(int key, int x, int y);
+void handleMouseclick(int button, int state, int x, int y);
+void rectangle(float len);
+void drawcircle(float rad);
+void drawcircle2(float rad);
 class Striker
 {
  public:
   float x,y,vx,vy,m;
   //Used to draw a line in third quadrant and first quadrant
-  void drawl(float x, float y)
+  void drawl(float x, float y ,float z, float c)
   {
     glBegin(GL_LINES);
-    glVertex2f(-x,y);
     glVertex2f(x,y);
+    glVertex2f(z,c);
+    glEnd();
+  }
+  void drawBall(float rad)
+  {
+    glBegin(GL_TRIANGLE_FAN);
+    for(int i=0 ; i<360 ; i++) 
+    {
+       glVertex2f(rad * cos(DEG2RAD(i)), rad * sin(DEG2RAD(i)));
+    }
     glEnd();
   }
 };
@@ -57,8 +82,26 @@ class Coins
     return ((a-c)*(a-c)) + ((b-d)*(b-d)); 
    }
 };
+class Barindicator
+{
+ public:
+        float x;
+        float y; 
+ void drawcircle2(float rad)
+ {
+   glBegin(GL_LINE_STRIP);
+   for(int i=0;i<360;i++) 
+   {
+     glVertex2f(rad * cos(DEG2RAD(i)), rad * sin(DEG2RAD(i)));
+    
+   }
+   glEnd();
+}
+};
+Barindicator s;
 Striker q;
 Coins c[19];
+//s.y = -( box_len / 2) + 0.5 ; 
 int isDragging=0;
 void mouseMove(int x, int y)
 {
@@ -103,20 +146,7 @@ void mouseButton(int button, int state, int x, int y)
   }
 }
 // Function Declarations
-void drawScene();
-void update(int value);
-void drawBox(float len);
-void drawBox2(float len);
-void drawBall(float rad);
-void drawTriangle();
-void initRendering();
-void handleResize(int w, int h);
-void handleKeypress1(unsigned char key, int x, int y);
-void handleKeypress2(int key, int x, int y);
-void handleMouseclick(int button, int state, int x, int y);
-void rectangle(float len);
-void drawcircle(float rad);
-void drawcircle2(float rad); 
+
 void Sprint( float x, float y)
 {
  glColor3f(1.0f, 0.0f, 0.0f);
@@ -157,8 +187,10 @@ void Sprint( float x, float y)
 int main(int argc, char **argv) 
 {
     // Initialize GLUT
+   s.y = -( box_len / 2) + 0.5 ;
    for (int i = 0; i < 19; i++)
    {
+    sflags[i]=0; 
     for (int j = 0; j < 19; j++)
      {
       flags[i][j]=0;
@@ -216,18 +248,19 @@ void drawScene()
     // Draw Box
     glTranslatef(0.0f, 0.0f, -8.0f);
     glColor3f(1.0f, 0.0f, 0.0f);
-   // drawcircle2(2.0f);
+    drawcircle2(2.0f);
     drawBox(box_len);
     drawBox2(box_len-0.65f);
-    glColor3f(1.0f , 0.0f,0.0f);
+    glColor3f(1.0f, 0.0f,0.0f);
     glBegin(GL_POLYGON);
     glVertex2f((box_len / 2) + 0.01, -( box_len / 2));
     glVertex2f((box_len / 2) + 0.01, poly_y1);
     glVertex2f((box_len / 2) + 0.26, poly_y1);
     glVertex2f((box_len / 2) + 0.26, -( box_len / 2) + 0.01 );
     glEnd();
-    glPushMatrix();
+   // glPushMatrix();
     Sprint(4.6f,3.0f);
+    glPushMatrix();
    if(flag==0 || flag2==1 )
    {
       glPushMatrix();
@@ -239,75 +272,90 @@ void drawScene()
     }
     glPushMatrix();
     glColor3f(1.0f,0.0f,0.0f);
-    drawBall(0.15f);
+    q.drawBall(0.15f);
+    glColor3f(0.0f,0.0f,0.0f);
+    //centre of carrom board
+    s.drawcircle2(0.20f);
     glPopMatrix();
    //Draw Board
    //bottom side of carrom board.
     glPushMatrix();
     glColor3f(0.0f,0.0f,0.0f);
     drawcircle2(6*ball_rad);
-    q.drawl(ball_x3+2.0f,ball_y3-0.5f+ball_rad-0.05f);
-    q.drawl(ball_x3+2.0f,ball_y3-0.5f-ball_rad+0.05f);
+    q.drawl(ball_x3+2.0f,ball_y3-0.5f+ball_rad-0.05f,-(ball_x3+2.0f),ball_y3-0.5f+ball_rad-0.05f);
+    q.drawl(ball_x3+2.0f,ball_y3-0.5f-ball_rad+0.05f,-(ball_x3+2.0f),ball_y3-0.5f-ball_rad+0.05f);
     glPushMatrix();
     glTranslatef(ball_x3+2.0f,ball_y3-0.5f,0.0f);
     glColor3f(1.0f,0.0f,0.0f);
-    drawBall(ball_rad-0.05f);  
+    q.drawBall(ball_rad-0.05f);  
     glPopMatrix();
     glPushMatrix();
     glTranslatef(-(ball_x3+2.0f),ball_y3-0.5f,0.0f);
     glColor3f(1.0f,0.0f,0.0f);
-    drawBall(ball_rad-0.05f);  
+    q.drawBall(ball_rad-0.05f);  
     glPopMatrix(); 
     glPushMatrix();
     glColor3f(0.0f,0.0f,0.0f); 
-    glBegin(GL_LINES);
-    glVertex2f(1.30,-1.30);
-    glVertex2f(((box_len/2)-1.1f) , -((box_len/2)-1.1f)); 
-    glEnd();
+    q.drawl(1.30,-1.30,((box_len/2)-1.1f) , -((box_len/2)-1.1f));
     glPopMatrix();
     glPushMatrix();
     glTranslatef(1.30,-1.30,0);
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(0))),((ball_rad+0.15)*sin(DEG2RAD(0))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix();
     drawcircle(ball_rad+0.15f); 
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(270))),((ball_rad+0.15)*sin(DEG2RAD(270))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix();
     glPopMatrix();
     glTranslatef(((box_len/2)-0.80f) , -((box_len/2)-0.80f),0);
-    drawBall(ball_rad+0.15f);
+    q.drawBall(ball_rad+0.15f);
     glPopMatrix(); 
     //2
     glPushMatrix();
     glColor3f(0.0f,0.0f,0.0f);
-    glBegin(GL_LINES);
-    glVertex2f(-(ball_y3-0.5f+ball_rad-0.05f),-(ball_x3+2.0f));
-    glVertex2f(-(ball_y3-0.5f+ball_rad-0.05f),(ball_x3+2.0f));
-    glEnd();
+    q.drawl(-(ball_y3-0.5f+ball_rad-0.05f),-(ball_x3+2.0f) ,-(ball_y3-0.5f+ball_rad-0.05f),(ball_x3+2.0f));
     glColor3f(0.0f,0.0f,0.0f);
-    glBegin(GL_LINES);
-    glVertex2f(-(ball_y3-0.5f-ball_rad+0.05f),-(ball_x3+2.0f));
-    glVertex2f(-(ball_y3-0.5f-ball_rad+0.05f),(ball_x3+2.0f));
-    glEnd();
+    q.drawl(-(ball_y3-0.5f-ball_rad+0.05f),-(ball_x3+2.0f) , -(ball_y3-0.5f-ball_rad+0.05f),(ball_x3+2.0f));
     glPushMatrix();
     glTranslatef(-(ball_y3-0.5f),ball_x3+2.0f,0.0f);
     glColor3f(1.0f,0.0f,0.0f);
-    drawBall(ball_rad-0.05f);  
+    q.drawBall(ball_rad-0.05f);  
     glPopMatrix();
     glPushMatrix();
     glTranslatef(-(ball_y3-0.5f),-(ball_x3+2.0f),0.0f);
     glColor3f(1.0f,0.0f,0.0f);
-    drawBall(ball_rad-0.05f);  
+    q.drawBall(ball_rad-0.05f);  
     glPopMatrix(); 
     glPushMatrix();
     glColor3f(0.0f,0.0f,0.0f); 
-    glBegin(GL_LINES);
-    glVertex2f(1.30,1.30);
-    glVertex2f(((box_len/2)-1.1f) , ((box_len/2)-1.1f)); 
-    glEnd();
+    q.drawl(1.30,1.30,((box_len/2)-1.1f) , ((box_len/2)-1.1f));
     glPopMatrix();
     glPushMatrix();
     glTranslatef(1.30,1.30,0);
     glRotatef(90.0f,0.0f,0.0f,1.0f);
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(0))),((ball_rad+0.15)*sin(DEG2RAD(0))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix();
     drawcircle(ball_rad+0.15f); 
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(270))),((ball_rad+0.15)*sin(DEG2RAD(270))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix(); 
     glPopMatrix();
     glTranslatef(((box_len/2)-0.80f) , ((box_len/2)-0.80f),0);
-    drawBall(ball_rad+0.15f);
+    q.drawBall(ball_rad+0.15f);
     glPopMatrix();
     //2
     glPushMatrix();
@@ -341,7 +389,19 @@ void drawScene()
     glPushMatrix();
     glTranslatef(-1.30,-1.30,0);
     glRotatef(270.0f,0.0f,0.0f,1.0f);
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(0))),((ball_rad+0.15)*sin(DEG2RAD(0))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix();
     drawcircle(ball_rad+0.15f); 
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(270))),((ball_rad+0.15)*sin(DEG2RAD(270))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix(); 
     glPopMatrix();
     glTranslatef(-((box_len/2)-0.80f) , -((box_len/2)-0.80f),0);
     drawBall(ball_rad+0.15f);
@@ -378,7 +438,19 @@ void drawScene()
     glPushMatrix();
     glTranslatef(-1.30,1.30,0);
     glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(0))),((ball_rad+0.15)*sin(DEG2RAD(0))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix();
     drawcircle(ball_rad+0.15f); 
+    glPushMatrix();
+    glTranslatef(((ball_rad+0.15)*cos(DEG2RAD(270))),((ball_rad+0.15)*sin(DEG2RAD(270))),0.0f);
+    glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+    glScalef(0.05f, 0.05f, 0.05f);
+    drawTriangle();
+    glPopMatrix(); 
     glPopMatrix();
     glTranslatef(-((box_len/2)-0.80f) , ((box_len/2)-0.80f),0);
     glRotatef(0.5, 0.0f, 0.0f, 1.0f);
@@ -454,8 +526,8 @@ void drawScene()
        for(i=9;i<11;i++)
        {
        glPushMatrix();
-       c[i].x = ((i-8)*2*ball_rad + 0.1) * cos(DEG2RAD(210)); 
-       c[i].y = ((i-8)*2*ball_rad + 0.1) * sin(DEG2RAD(210));  
+       c[i].x = ((i-8)*2*(ball_rad + 0.1))* cos(DEG2RAD(210)); 
+       c[i].y = ((i-8)*2*(ball_rad + 0.1)) * sin(DEG2RAD(210));  
        glTranslatef(c[i].x, c[i].y , 0.0f);
        if((i-6)%2==0)
        {
@@ -473,8 +545,8 @@ void drawScene()
         for(i=11;i<13;i++)
        {
               glPushMatrix();
-              c[i].x = ((i-10)*2*ball_rad + (0.1)) * cos(DEG2RAD(330)) ;
-              c[i].y = ((i-10)*2*ball_rad + (0.1)) * sin(DEG2RAD(330)) ;  
+              c[i].x = ((i-10)*2*(ball_rad + (0.1))) * cos(DEG2RAD(330)) ;
+              c[i].y = ((i-10)*2*(ball_rad + (0.1))) * sin(DEG2RAD(330)) ;  
               glTranslatef(c[i].x, c[i].y , 0.0f);
               if((i-6)%2==0)
               {
@@ -528,7 +600,6 @@ void drawScene()
     glPopMatrix();
     glutSwapBuffers();
 }
-
 // updated evry 10 milliseconds
 void update(int value) {
     count ++;
@@ -539,8 +610,6 @@ void update(int value) {
     }
     if(score==0)
       exit(0);
-   float vel1,vel2;
-    float x22=(box_len-0.65f)/2; 
     int i,j;
     float c1,c2,c3,c4;
     float new_rad = ball_rad + 0.15;
@@ -551,9 +620,6 @@ void update(int value) {
       q.vx *=0.98;
       q.vy *=0.98;
     } 
-   /* if(q.vx == 0 && q.vy == 0)
-       c_flag =1;
-    */
     for(i=0;i<19;i++)
     {
       if(c[i].x + ball_rad > (box_len-0.65)/2 || c[i].x - ball_rad < -(box_len-0.65)/2)
@@ -564,7 +630,7 @@ void update(int value) {
       c[i].y += c[i].vy;
       c[i].vx *= 0.98;
       c[i].vy *= 0.98;  
-   } 
+    } 
     for (i = 0; i < 19; ++i)
     {
       c1 = abs(c[i].x-2.65);
@@ -647,8 +713,9 @@ void drawcircle(float rad)
 {
    // glColor3f(0.0f,0.0f,0.0f);
    glBegin(GL_LINE_STRIP);
+   int i=0;;
    //glColor3f(0.0f,0.0f,0.0f); 
-   for(int i=0;i<270;i++) 
+   for(i=0;i<270;i++) 
    {
        glVertex2f(rad * cos(DEG2RAD(i)), rad * sin(DEG2RAD(i)));
    }
@@ -689,8 +756,8 @@ void rectangle(float len)
    glEnd();
    glFlush();
 }
-void drawBall(float rad) {
-    
+void drawBall(float rad)
+ {
    glBegin(GL_TRIANGLE_FAN);
    for(int i=0 ; i<360 ; i++) 
    {
